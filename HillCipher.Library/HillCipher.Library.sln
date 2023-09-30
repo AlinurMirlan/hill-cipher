@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HillCipher.Library", "HillCipher.Library.csproj", "{871685D5-26C0-433B-8156-64D493E1059E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{871685D5-26C0-433B-8156-64D493E1059E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{871685D5-26C0-433B-8156-64D493E1059E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{871685D5-26C0-433B-8156-64D493E1059E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{871685D5-26C0-433B-8156-64D493E1059E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D5844DD7-EC8D-43C7-BB7E-0A2F5BF1DCEF}
+	EndGlobalSection
+EndGlobal
