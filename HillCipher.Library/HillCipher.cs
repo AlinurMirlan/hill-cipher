@@ -3,32 +3,21 @@ using System.Text;
 
 namespace HillCipher.Library;
 
-public class HillCipher : ICipher<int[,]>
+public class HillCipher : ICipher<double[,]>
 {
+    private const char whiteSpace = ' ';
     private int _blockLength;
     private char[] _alphabet;
-    private readonly MatrixBuilder<int> _matrixBuilder;
+    private readonly MatrixBuilder<double> _matrixBuilder = Matrix<double>.Build;
     private Dictionary<char, int> _letterIndexLookup;
-    private Matrix<int> _key;
-    
+    private Matrix<double> _key;
 
-    public HillCipher(char[] alphabet, int[,] keyValues)
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public HillCipher(char[] alphabet, double[,] keyValues)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
-        if (alphabet.Length <= 0)
-            throw new ArgumentException($"{nameof(Alphabet)} must not be empty.");
-        if (keyValues.GetLength(0) != keyValues.GetLength(1))
-            throw new ArgumentException($"{nameof(Key)} dimensions must match.");
-
-        _alphabet = alphabet;
-        _matrixBuilder = Matrix<int>.Build;
-        int index = 0;
-        _letterIndexLookup = alphabet.ToDictionary(letter => letter, _ => index++);
-        Matrix<int> key = _matrixBuilder.DenseOfArray(keyValues) % _alphabet.Length;
-        if (key.Determinant() == 0)
-            throw new ArgumentException("{nameof(Key)} dimensions must be invertibe.");
-
-        _key = key;
-        _blockLength = keyValues.GetLength(0);
+        Alphabet = alphabet;
+        Key = keyValues;
     }
 
     public char[] Alphabet
@@ -38,13 +27,17 @@ public class HillCipher : ICipher<int[,]>
         {
             if (value.Length <= 0)
                 throw new ArgumentException($"{nameof(Alphabet)} must not be empty.");
+
+            if (!value.Contains(whiteSpace))
+                throw new ArgumentException($"{nameof(Alphabet)} must contain a white space ' '.");
+
             int index = 0;
             _letterIndexLookup = value.ToDictionary(letter => letter, _ => index++);
             _alphabet = value;
         }
     }
 
-    public int[,] Key
+    public double[,] Key
     {
         get => _key.AsArray();
         set
@@ -52,9 +45,16 @@ public class HillCipher : ICipher<int[,]>
             if (value.GetLength(0) != value.GetLength(1))
                 throw new ArgumentException($"{nameof(Key)} dimensions must match.");
 
-            Matrix<int> key = _matrixBuilder.DenseOfArray(value) % _alphabet.Length;
-            if (key.Determinant() == 0)
-                throw new ArgumentException("{nameof(Key)} dimensions must be invertibe.");
+            int alphabetLength = _alphabet.Length;
+            Matrix<double> key = _matrixBuilder.DenseOfArray(value) % alphabetLength;
+            int determinant = (int)Math.Round(key.Determinant()) % alphabetLength;
+            if (determinant == 0)
+                throw new ArgumentException($"{nameof(Key)} dimensions must be invertibe.");
+
+            if (determinant < 0)
+                determinant += alphabetLength;
+            if (Gcd.CommonDivisor(determinant, _alphabet.Length) != 1)
+                throw new ArgumentException($"Determinant of the {nameof(Key)} must be coprime to the alphabet length.");
 
             _key = key;
             _blockLength = value.GetLength(0);
@@ -65,42 +65,47 @@ public class HillCipher : ICipher<int[,]>
 
     public string Decrypt(string message)
     {
-        Matrix<int> keyInverse = _key.Inverse() % _alphabet.Length;
+        Matrix<double> keyInverse = InverseKey(_key);
         return Cipher(message, keyInverse);
     }
 
-    private string Cipher(string message, Matrix<int> key)
+    private string Cipher(string message, Matrix<double> key)
     {
         int i;
         StringBuilder encryptedMessageBuilder = new();
-        for (i = _blockLength; i < message.Length; i += _blockLength)
+        for (i = _blockLength; i <= message.Length; i += _blockLength)
         {
             CipherSpan(message, i - _blockLength, i, key, encryptedMessageBuilder);
         }
 
-        if (i > message.Length)
+        int lastIndex = i - _blockLength;
+        if (lastIndex != message.Length)
         {
-            int leftoutIndicesCount = message.Length - i;
-            Matrix<int> subKey = key.SubMatrix(0, leftoutIndicesCount, 0, leftoutIndicesCount);
-            CipherSpan(message, message.Length, i, subKey, encryptedMessageBuilder);
+            message = message.PadRight(lastIndex + _blockLength, whiteSpace);
+            CipherSpan(message, lastIndex, lastIndex + _blockLength, key, encryptedMessageBuilder);
         }
 
         return encryptedMessageBuilder.ToString();
     }
 
-    private void CipherSpan(string message, int left, int right, Matrix<int> key, StringBuilder messageBuilder)
+    private void CipherSpan(string message, int left, int right, Matrix<double> key, StringBuilder messageBuilder)
     {
-        int[] letterIndices = GetLetterIndices(message, left, right);
+        double[] letterIndices = GetLetterIndices(message, left, right);
         int letterSpan = right - left;
-        Matrix<int> originalLetterIndices = _matrixBuilder.Dense(letterSpan, 1, letterIndices);
-        Matrix<int> encryptedLetterIndices = (key * originalLetterIndices) % _alphabet.Length;
-        foreach (int letterIndex in encryptedLetterIndices.AsColumnMajorArray())
+        Matrix<double> originalLetterIndices = _matrixBuilder.Dense(letterSpan, 1, letterIndices);
+        Matrix<double> encryptedLetterIndices = key * originalLetterIndices % _alphabet.Length;
+        foreach (double realLetterIndex in encryptedLetterIndices.AsColumnMajorArray())
+        {
+            int letterIndex = realLetterIndex < 0 
+                ? (int)Math.Floor(realLetterIndex) + _alphabet.Length 
+                : (int)realLetterIndex;
             messageBuilder.Append(_alphabet[letterIndex]);
+        }
     }
 
-    private int[] GetLetterIndices(string message, int left, int right)
+    private double[] GetLetterIndices(string message, int left, int right)
     {
-        int[] letterIndices = new int[right - left];
+        double[] letterIndices = new double[right - left];
         for (int i = left, k = 0; i < right; i++, k++)
         {
             char characer = message[i];
@@ -111,5 +116,37 @@ public class HillCipher : ICipher<int[,]>
         }
 
         return letterIndices;
+    }
+
+    private Matrix<double> InverseKey(Matrix<double> key)
+    {
+        int alphabetLength = _alphabet.Length;
+        Matrix<double> adjugateKey = key.Adjugate() % alphabetLength;
+        NormalizeMatrix(adjugateKey);
+
+        double keyDeterminant = Math.Round(key.Determinant()) % alphabetLength;
+        if (keyDeterminant < 0)
+            keyDeterminant += alphabetLength;
+
+        int inverseDeterminant = 0;
+        int inverseAlphabet = 0;
+        Gcd.CommonDivisorExtended((int)keyDeterminant, alphabetLength, ref inverseDeterminant, ref inverseAlphabet);
+        if (inverseDeterminant < 0)
+            inverseDeterminant += alphabetLength;
+
+        return inverseDeterminant * adjugateKey % alphabetLength;
+    }
+
+    private void NormalizeMatrix(Matrix<double> matrix)
+    {
+        for (int i = 0; i < matrix.RowCount; i++)
+        {
+            for (int j = 0; j < matrix.ColumnCount; j++)
+            {
+                matrix[i, j] = Math.Round(matrix[i, j]);
+                if (matrix[i, j] < 0)
+                    matrix[i, j] += _alphabet.Length;
+            }
+        }
     }
 }

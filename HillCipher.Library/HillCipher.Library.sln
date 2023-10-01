@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HillCipher.Library", "HillCipher.Library.csproj", "{871685D5-26C0-433B-8156-64D493E1059E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HillCipher.Library", "HillCipher.Library.csproj", "{871685D5-26C0-433B-8156-64D493E1059E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HillCipher.ConsoleApp", "..\HillCipher.ConsoleApp\HillCipher.ConsoleApp.csproj", "{12A8075F-9FC3-44D2-85C1-A82FBDCE2A84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{871685D5-26C0-433B-8156-64D493E1059E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{871685D5-26C0-433B-8156-64D493E1059E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{871685D5-26C0-433B-8156-64D493E1059E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12A8075F-9FC3-44D2-85C1-A82FBDCE2A84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12A8075F-9FC3-44D2-85C1-A82FBDCE2A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12A8075F-9FC3-44D2-85C1-A82FBDCE2A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12A8075F-9FC3-44D2-85C1-A82FBDCE2A84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
