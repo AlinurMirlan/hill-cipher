@@ -11,6 +11,20 @@ namespace HillCipher.Library;
 
 public static class MatrixExtensions
 {
+    public static double[,] AsTwoDimensionalArray(this Matrix<double> matrix)
+    {
+        double[,] array = new double[matrix.RowCount, matrix.ColumnCount];
+        for (int i = 0; i < matrix.RowCount; i++)
+        {
+            for (int j = 0; j < matrix.ColumnCount; j++)
+            {
+                array[i, j] = matrix[i, j];
+            }
+        }
+
+        return array;
+    }
+
     public static Matrix<double> Adjugate(this Matrix<double> matrix)
     {
         MatrixBuilder<double> builder = Matrix<double>.Build;
