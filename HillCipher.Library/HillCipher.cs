@@ -11,6 +11,7 @@ public class HillCipher : ICipher<double[,]>
     private readonly MatrixBuilder<double> _matrixBuilder = Matrix<double>.Build;
     private Dictionary<char, int> _letterIndexLookup;
     private Matrix<double> _key;
+    private readonly HillMatrixOperation _hillMatrix;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public HillCipher(char[] alphabet, double[,] keyValues)
@@ -18,6 +19,7 @@ public class HillCipher : ICipher<double[,]>
     {
         Alphabet = alphabet;
         Key = keyValues;
+        _hillMatrix = new HillMatrixOperation(alphabet);
     }
 
     public char[] Alphabet
@@ -65,7 +67,7 @@ public class HillCipher : ICipher<double[,]>
 
     public string Decrypt(string message)
     {
-        Matrix<double> keyInverse = InverseKey(_key);
+        Matrix<double> keyInverse = _hillMatrix.Inverse(_key);
         return Cipher(message, keyInverse);
     }
 
@@ -116,37 +118,5 @@ public class HillCipher : ICipher<double[,]>
         }
 
         return letterIndices;
-    }
-
-    private Matrix<double> InverseKey(Matrix<double> key)
-    {
-        int alphabetLength = _alphabet.Length;
-        Matrix<double> adjugateKey = key.Adjugate() % alphabetLength;
-        NormalizeMatrix(adjugateKey);
-
-        double keyDeterminant = Math.Round(key.Determinant()) % alphabetLength;
-        if (keyDeterminant < 0)
-            keyDeterminant += alphabetLength;
-
-        int inverseDeterminant = 0;
-        int inverseAlphabet = 0;
-        Gcd.CommonDivisorExtended((int)keyDeterminant, alphabetLength, ref inverseDeterminant, ref inverseAlphabet);
-        if (inverseDeterminant < 0)
-            inverseDeterminant += alphabetLength;
-
-        return inverseDeterminant * adjugateKey % alphabetLength;
-    }
-
-    private void NormalizeMatrix(Matrix<double> matrix)
-    {
-        for (int i = 0; i < matrix.RowCount; i++)
-        {
-            for (int j = 0; j < matrix.ColumnCount; j++)
-            {
-                matrix[i, j] = Math.Round(matrix[i, j]);
-                if (matrix[i, j] < 0)
-                    matrix[i, j] += _alphabet.Length;
-            }
-        }
     }
 }
