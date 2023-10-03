@@ -31,21 +31,21 @@ public class HillCipherCracker
         }
     }
 
-    public double[,] ExtractKey(string originalExcerpt, string decryptedExcerpt)
+    public double[,] ExtractKey(string originalExcerpt, string encryptedExcerpt)
     {
-        if (originalExcerpt.Length != decryptedExcerpt.Length)
-            throw new ArgumentException($"The length of the {originalExcerpt} and {decryptedExcerpt} must match.");
+        if (originalExcerpt.Length != encryptedExcerpt.Length)
+            throw new ArgumentException("The length of the original excerpt and encrypted excerpt must match.");
 
         if (Math.Sqrt(originalExcerpt.Length) % 1 != 0)
-            throw new ArgumentException($"{originalExcerpt}'s lenght must be perfect square.");
+            throw new ArgumentException("Excerpts' lenght must be perfect square.");
 
         int dimension = (int)Math.Sqrt(originalExcerpt.Length);
         Matrix<double> originialMatrix = _matrixBuilder.DenseOfArray(GetLetterIndices(originalExcerpt, dimension));
         ValidateOriginalMatrix(originialMatrix);
 
-        Matrix<double> decryptedMatrix = _matrixBuilder.DenseOfArray(GetLetterIndices(decryptedExcerpt, dimension));
+        Matrix<double> encryptedMatrix = _matrixBuilder.DenseOfArray(GetLetterIndices(encryptedExcerpt, dimension));
         Matrix<double> originalInverse = _hillOperation.Inverse(originialMatrix);
-        Matrix<double> keyMatrix = decryptedMatrix * originalInverse % _alphabet.Length;
+        Matrix<double> keyMatrix = encryptedMatrix * originalInverse % _alphabet.Length;
         return keyMatrix.AsTwoDimensionalArray();
     }
 
@@ -73,7 +73,7 @@ public class HillCipherCracker
                 if (_letterIndexLookup.TryGetValue(characer, out int index))
                     letterIndices[j, i] = index;
                 else
-                    throw new InvalidOperationException("Message contains unknown, the ones not included in the alphabet, characters.");
+                    throw new InvalidOperationException("Message must not contain unknown, the ones not included in the alphabet, characters.");
             }
         }
 
