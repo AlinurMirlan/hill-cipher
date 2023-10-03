@@ -7,3 +7,5 @@
 /HillCipher.ConsoleApp
 /HillCipher.Library/bin/Debug/net7.0
 /HillCipher.Forms/obj
+/HillCipher.Forms/bin/Debug/net7.0-windows
+/textFile.txt
