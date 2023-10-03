@@ -10,17 +10,24 @@ public class HillCipher : ICipher<double[,]>
     private char[] _alphabet;
     private readonly MatrixBuilder<double> _matrixBuilder = Matrix<double>.Build;
     private Dictionary<char, int> _letterIndexLookup;
-    private Matrix<double> _key;
+    private Matrix<double>? _key;
     private readonly HillMatrixOperation _hillMatrix;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public HillCipher(char[] alphabet)
+    {
+        Alphabet = alphabet;
+        _hillMatrix = new HillMatrixOperation(alphabet);
+    }
+
+
     public HillCipher(char[] alphabet, double[,] keyValues)
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         Alphabet = alphabet;
         Key = keyValues;
         _hillMatrix = new HillMatrixOperation(alphabet);
     }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public char[] Alphabet
     {
@@ -39,11 +46,14 @@ public class HillCipher : ICipher<double[,]>
         }
     }
 
-    public double[,] Key
+    public double[,]? Key
     {
-        get => _key.AsArray();
+        get => _key?.AsTwoDimensionalArray();
         set
         {
+            if (value is null)
+                return;
+
             if (value.GetLength(0) != value.GetLength(1))
                 throw new ArgumentException($"{nameof(Key)} dimensions must match.");
 
@@ -63,10 +73,19 @@ public class HillCipher : ICipher<double[,]>
         }
     }
 
-    public string Encrypt(string message) => Cipher(message, _key);
+    public string Encrypt(string message)
+    {
+        if (_key is null)
+            throw new NullReferenceException("Key is not set.");
+
+        return Cipher(message, _key);
+    }
 
     public string Decrypt(string message)
     {
+        if (_key is null)
+            throw new NullReferenceException("Key is not set.");
+
         Matrix<double> keyInverse = _hillMatrix.Inverse(_key);
         return Cipher(message, keyInverse);
     }
@@ -111,6 +130,7 @@ public class HillCipher : ICipher<double[,]>
         for (int i = left, k = 0; i < right; i++, k++)
         {
             char characer = message[i];
+
             if (_letterIndexLookup.TryGetValue(characer, out int index))
                 letterIndices[k] = index;
             else
